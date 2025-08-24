@@ -1,0 +1,7 @@
+node_modules/
+/app/build/
+/app/dist/
+/renderer/build/
+.vscode
+.env
+/app/config.json

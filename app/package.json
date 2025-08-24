@@ -1,0 +1,30 @@
+{
+    "name": "for-translator",
+    "version": "1.0.0",
+    "main": "./build/main.js",
+    "scripts": {
+        "start": "node -e \"console.clear()\" && npx tsc && electron .",
+        "dev": "nodemon -e ts --watch ./src --exec npm start",
+        "build": "electron-builder",
+        "test": "npx tsc && node ./build/test.js"
+    },
+    "author": "이준영",
+    "license": "ISC",
+    "description": "",
+    "devDependencies": {
+        "@types/dotenv": "^6.1.1",
+        "@types/electron": "^1.4.38",
+        "@types/node": "^24.3.0",
+        "@types/sound-play": "^1.1.3",
+        "electron": "^37.3.1",
+        "electron-builder": "^26.0.12",
+        "nodemon": "^3.1.10",
+        "typescript": "^5.9.2"
+    },
+    "dependencies": {
+        "@nut-tree-fork/nut-js": "^4.2.6",
+        "dotenv": "^17.2.1",
+        "puppeteer": "^24.17.0",
+        "sound-play": "^1.1.0"
+    }
+}

@@ -1,0 +1,40 @@
+body {
+    margin: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+#app {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+}
+
+#app>header {
+    background: #079fe6;
+    padding: 10px;
+    padding-left: 20px;
+    color: white;
+}
+
+#app>section {
+    flex: 1;
+
+    display: flex;
+    flex-direction: row;
+}
+
+#app .file-list-holder {
+    position: relative;
+    width: 220px;
+}
+
+#app .file-content-holder {
+    position: relative;
+    flex: 1;
+}

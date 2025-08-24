@@ -1,0 +1,29 @@
+.file-list {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+
+    overflow: hidden;
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.file-list .file-item {
+    padding: 5px;
+    padding-left: 20px;
+    padding-right: 20px;
+
+    cursor: pointer;
+
+    div.name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.file-list .file-item:hover {
+    background: rgb(225, 244, 255);
+}

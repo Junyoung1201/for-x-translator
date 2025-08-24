@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "target": "es2021",
+        "module": "commonjs",
+        "esModuleInterop": true,
+        "jsx": "react-jsx",
+        "skipLibCheck": true,
+        "noEmit": true,
+        "sourceMap": false,
+        "baseUrl": "./src",
+        "paths": {
+            "utils/*": ["utils/*"],
+            "components/*": ["components/*"],
+            "store/*": ["store/*"],
+            "types/*": ["types/*"],
+            "modules/*": ["modules/*"]
+        }
+    },
+    "include": [
+        "src/**/*"
+    ]
+}

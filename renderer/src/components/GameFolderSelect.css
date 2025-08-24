@@ -1,0 +1,28 @@
+#game-folder-select {
+    position: fixed;
+    z-index: 99;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+
+    .content {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+    }
+
+    #game-folder-select-btn {
+        outline: none;
+        border: 0;
+        padding: 5px;
+        cursor: pointer;;
+    }
+}
