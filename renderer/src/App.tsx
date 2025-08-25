@@ -5,11 +5,13 @@ import { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { useSelector } from 'react-redux';
 import { Provider } from 'react-redux';
-import { gameSelector, setGameDir } from 'store/game';
+import { gameSelector, setGameDir, setSelectedFile } from 'store/game';
 import { store } from 'store/store';
 import './App.css';
 import path from 'path';
-import StringList from 'components/StringList';
+import FileEditor from 'components/file-viewer/FileEditor';
+import { openLastTranslationFile } from 'modules/file-editor';
+import SystemMessage from 'components/header/SystemMessage';
 
 ReactDOM.createRoot(document.querySelector("body>#app")!).render(
     <Provider store={store}>
@@ -22,13 +24,40 @@ function App() {
     const { gameDir } = useSelector(gameSelector);
 
     useEffect(() => {
-
         (async () => {
             await waitForVariables();
             await initConfig();
-            openLastGameDir();
+            openLastTranslationFile();
+
+            window.addEventListener('keydown', onGlobalShortcut);
         })();
+
+        return () => {
+            window.removeEventListener('keydown', onGlobalShortcut);
+        }
     }, [])
+
+    useEffect(() => {
+        window.addEventListener('keydown', onGlobalShortcut);
+
+        return () => {
+            window.removeEventListener('keydown', onGlobalShortcut);
+        }
+    }, [gameDir]);
+
+    function onGlobalShortcut(e: KeyboardEvent) {
+        const key = e.key.toLowerCase();
+
+        // 파일 새로고침
+        if (key === 'f5' || (e.ctrlKey && key === 'r')) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            console.log("hello world");
+
+            openLastTranslationFile();
+        }
+    }
 
     async function waitForVariables() {
         return new Promise(done => {
@@ -40,28 +69,18 @@ function App() {
             }
 
             let timer = setInterval(() => {
-                if(checkVariables()) {
+                if (checkVariables()) {
                     console.log("준비되었습니다.")
                     clearInterval(timer);
                     done(null);
                 }
-            },10);
+            }, 10);
         })
     }
 
     async function initConfig() {
         await Config.loadConfig();
         console.log("설정을 불러왔습니다:", Config.getConfig());
-    }
-
-    async function openLastGameDir() {
-        const lastGameDir = Config.getConfig().lastGameDir;
-
-        if (lastGameDir) {
-            // state 업데이트
-            store.dispatch(setGameDir(lastGameDir));
-            console.log("마지막으로 작업했던 게임 폴더를 열었습니다:", lastGameDir);
-        }
     }
 
     return <>
@@ -72,7 +91,13 @@ function App() {
             gameDir &&
             <>
                 <header>
-                    게임: {gameDir.slice(gameDir.lastIndexOf(path.sep) + 1, gameDir.length)}
+                    <div className='left'>
+                        <div>게임: {gameDir.slice(gameDir.lastIndexOf(path.sep) + 1, gameDir.length)}</div>
+                    </div>
+                    
+                    <div className='right'>
+                        <SystemMessage />
+                    </div>
                 </header>
 
                 <section>
@@ -80,7 +105,7 @@ function App() {
                         <FileList />
                     </div>
                     <div className='file-content-holder'>
-                        <StringList />
+                        <FileEditor />
                         <div className='menu'>
 
                         </div>

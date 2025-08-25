@@ -3,6 +3,7 @@ import path from 'path';
 
 interface I_Config {
     lastGameDir?: string
+    lastTranslationFile?: string
 }
 
 export class Config {
@@ -17,9 +18,12 @@ export class Config {
         return { ...Config.config };
     }
 
+    static setLastTranslationFile(file: string) {
+        Config.config.lastTranslationFile = file;
+    }
+
     static setLastGameDir(dir: string) {
         Config.config.lastGameDir = dir;
-        Config.saveConfig();
     }
 
     static async hasConfigFile() {

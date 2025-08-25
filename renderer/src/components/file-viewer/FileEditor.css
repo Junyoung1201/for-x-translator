@@ -1,0 +1,114 @@
+#file-editor {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+
+    overflow: hidden;
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+
+    padding-bottom: 20px;
+}
+
+#file-editor .line-head {
+
+    --padding: 5px;
+
+    display: flex;
+    flex-direction: row;
+
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-bottom: 0;
+
+    >div {
+        background: rgb(241, 241, 241);
+
+        padding: var(--padding);
+        flex: 1;
+        font-weight: bold;
+    }
+
+    >div:not(:first-child) {
+        padding-left: calc(var(--padding) + 3px);
+        border-left: 1px solid rgba(0, 0, 0, 0.15);
+    }
+}
+
+#file-editor .content-line {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+/*
+        원문, 번역문 줄
+*/
+#file-editor .content-line[data-role='translate-line'] {
+    display: flex;
+    flex-direction: row;
+
+    width: 100%;
+
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-left: 0;
+
+    input {
+        padding: 3px;
+        outline: none;
+        border: 0;
+        font-size: 16px;
+
+        flex: 1;
+    }
+
+    >input:not(:last-child) {
+        border-left: 1px solid rgba(0, 0, 0, 0.15);
+    }
+
+    input:focus {
+        background: rgba(0, 0, 0, 0.045);
+        flex: 5;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+
+    input:not(:first-child) {
+        padding-left: 5px;
+    }
+
+    .menu {}
+}
+
+/*
+        주석 줄
+*/
+#file-editor .content-line[data-role="comment"] {
+    position: relative;
+
+    --height: 45px;
+
+    min-height: var(--height);
+    max-height: var(--height);
+    height: var(--height);
+
+    padding-left: 5px;
+
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+
+    input {
+        position: relative;
+        top: 0px;
+        left: -4px;
+        width: 100%;
+        font-size: 22px;
+        font-weight: bold;
+        background: transparent;
+        outline: none;
+        border: 0;
+    }
+}
