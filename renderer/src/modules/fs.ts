@@ -1,5 +1,6 @@
 import { dialog, ipcRenderer } from "electron";
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import path from "path";
 
 export async function pathExists(fileOrDir: string) {
@@ -11,7 +12,16 @@ export async function pathExists(fileOrDir: string) {
     }
 }
 
-export async function openGameFolderDialog() {
+export function pathExistSync(fileOrDir: string) {
+    try {
+        fsSync.accessSync(fileOrDir);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+export async function openGameDirSelectDialog() {
     const {filePaths} = (await ipcRenderer.invoke("openFolderDialog", {title: "게임 폴더 선택"}) ?? {filePaths: []});
     const [dir] = filePaths;
 

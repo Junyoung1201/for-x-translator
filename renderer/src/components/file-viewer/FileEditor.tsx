@@ -6,7 +6,7 @@ import fs from 'fs/promises';
 import { store } from "store/store";
 import ContentLine from "./ContentLine";
 import { I_StringLine } from "types/file-editor";
-import { saveFile } from "modules/file-editor";
+import { getStringListFromFile, saveFile } from "modules/file-editor";
 
 export default function FileEditor() {
     const { selectedFile } = useSelector(gameSelector);
@@ -23,10 +23,26 @@ export default function FileEditor() {
 
     useEffect(() => {
         if (selectedFile) {
+            loadStringList();
+        } else {
             setStringList([]);
-            loadStringList()
         }
     }, [selectedFile])
+
+    async function loadStringList() {
+        try {
+
+            const newStringList = await getStringListFromFile(selectedFile);
+            setStringList(newStringList);
+            console.log("데이터를 불러왔습니다:",newStringList);
+
+        } catch (err) {
+            console.error(`파일로부터 데이터를 가져오지 못했습니다: "${selectedFile}"`);
+            console.error(err);
+            setStringList([]);
+            store.dispatch(setSelectedFile(undefined));
+        }
+    }
 
     function onKeyDown(e: KeyboardEvent) {
         const key = e.key.toLowerCase();
@@ -35,14 +51,14 @@ export default function FileEditor() {
             e.preventDefault();
             e.stopPropagation();
 
-            saveAllChanged();
+            save();
         }
     }
 
     /**
-     *  모든 변경사항을 stringList에 적용
+     *  모든 변경사항을 stringList에 적용 후 파일 저장
      */
-    async function saveAllChanged() {
+    async function save() {
         const fileEditorElement = fileEditorRef.current;
 
         if (!fileEditorElement) {
@@ -104,67 +120,6 @@ export default function FileEditor() {
         await saveFile(newStringList, selectedFile);
 
         console.log("모든 변경사항을 적용했습니다:",newStringList);
-    }
-
-    async function loadStringList() {
-        console.log(`다음 파일을 로드 중: "${selectedFile}"`);
-
-        try {
-            const fileContent = await fs.readFile(selectedFile, 'utf-8');
-            const newStringList: I_StringLine[] = [];
-
-            for (let str of fileContent.split("\n")) {
-
-                str = str.trim();
-
-                // 아무것도 없는 줄은 건너뛰기
-                if (!str || str.length === 0 || str === '#') {
-                    continue;
-                }
-
-                // 주석 처리
-                if (str.startsWith("#")) {
-
-                    if (str.startsWith("# ")) {
-                        str = str.slice(2, str.length);
-                    } else {
-                        str = str.slice(1, str.length);
-                    }
-
-                    newStringList.push({
-                        srcText: str,
-                        destText: "",
-                        comment: true
-                    })
-                    continue;
-                }
-
-                // 이스케이프 처리되지 않은 '=' 문자를 기준으로 원문과 번역문 나누기
-                let srcText = "";
-                let destText = "";
-
-                for (let i = 0; i < str.length; i++) {
-                    if (str[i] === '=' && !(i - 1 >= 0 && str[i - 1] === '\\')) {
-                        break;
-                    }
-
-                    srcText += str[i];
-                }
-
-                destText = str.slice(srcText.length + 1, str.length);
-
-                newStringList.push({
-                    srcText, destText
-                })
-            }
-
-            setStringList(newStringList);
-
-        } catch (err) {
-            console.error(`파일을 로드할 수 없습니다: "${selectedFile}"`);
-            console.error(err);
-            store.dispatch(setSelectedFile(undefined));
-        }
     }
 
     return <div id="file-editor" ref={fileEditorRef}>

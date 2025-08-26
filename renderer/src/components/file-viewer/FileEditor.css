@@ -1,8 +1,14 @@
 #file-editor {
     position: absolute;
+
+    /*
+        FileEditor의 가로 길이를 설정하려면
+        여기가 아니라 App.css의 file-editor-holder
+        설정을 변경할 것!
+    */
     height: 100%;
     width: 100%;
-
+    
     overflow: hidden;
     overflow-y: auto;
 
@@ -21,6 +27,7 @@
     flex-direction: row;
 
     border: 1px solid rgba(0, 0, 0, 0.15);
+    border-left: 0;
     border-bottom: 0;
 
     >div {
@@ -64,14 +71,10 @@
         flex: 1;
     }
 
-    >input:not(:last-child) {
-        border-left: 1px solid rgba(0, 0, 0, 0.15);
-    }
-
     input:focus {
-        background: rgba(0, 0, 0, 0.045);
+        background: rgba(0, 0, 0, 0.08);
         flex: 5;
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     }
 
     input:not(:first-child) {

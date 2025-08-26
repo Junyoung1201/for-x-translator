@@ -1,0 +1,17 @@
+[v] 번역 기능
+    [x] 파파고
+    [x] 로그 작성 기능 (현재 sendTranslationLog 메소드만 만들어두고 사용하질 않고 있음)
+
+[x] 사용하지 않는 패키지 정리하기
+
+[x] FileEditor
+    [x] 파일 해쉬 값으로 파일 내용 읽으면 캐시하고, cached라는 파일로 저장해놓기 (캐시된 파일 내용은 encodeURIComponent -> base64으로 저장)
+    [x] ContentLine에 줄 삭제 기능 추가
+
+[x] 단축키 관련
+    [x] 단축키 설정 기능 추가
+    [x] pagedown 키를 누르면 "textarea#tl-output"에 있는 내용을 현재 CotentLine의 번역문에 반영하게 하기
+
+[x] 기타
+    [x] pichon 라이선스 문구 넣기
+    [x] copyright 문구 넣기

@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "main": "./build/main.js",
     "scripts": {
-        "start": "node -e \"console.clear()\" && npx tsc && electron .",
+        "start": "node -e \"console.clear()\" && npx tsc && electron . -d",
         "dev": "nodemon -e ts --watch ./src --exec npm start",
         "build": "electron-builder",
         "test": "npx tsc && node ./build/test.js"
@@ -12,6 +12,7 @@
     "license": "ISC",
     "description": "",
     "devDependencies": {
+        "@types/axios": "^0.9.36",
         "@types/dotenv": "^6.1.1",
         "@types/electron": "^1.4.38",
         "@types/node": "^24.3.0",
@@ -23,8 +24,11 @@
     },
     "dependencies": {
         "@nut-tree-fork/nut-js": "^4.2.6",
+        "axios": "^1.11.0",
         "dotenv": "^17.2.1",
         "puppeteer": "^24.17.0",
+        "puppeteer-extra": "^3.3.6",
+        "puppeteer-extra-plugin-stealth": "^2.11.2",
         "sound-play": "^1.1.0"
     }
 }

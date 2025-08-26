@@ -8,6 +8,7 @@ interface I_Config {
 
 export class Config {
     private static DEF_CONFIG: I_Config = {}
+
     private static config: I_Config = {}
 
     static getConfigFilePath() {

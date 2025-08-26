@@ -8,6 +8,8 @@
 
     display: flex;
     flex-direction: column;
+
+    border-right: 1px solid var(--c-border);
 }
 
 /*
@@ -16,9 +18,6 @@
 .file-list .search {
 
     position: relative;
-
-    border: 1px solid rgba(0,0,0,0.15);
-    border-right: 0;
 
     input {
         padding: 9.5px;
@@ -33,6 +32,9 @@
 }
 
 .file-list .file-item {
+    position: relative;
+    z-index: 0;
+
     padding: 5px;
     padding-left: 20px;
     padding-right: 20px;
@@ -48,4 +50,9 @@
 
 .file-list .file-item:hover {
     background: rgb(225, 244, 255);
+}
+
+#app .file-list-holder:has(.file-list .file-item:hover),
+#app .file-list-holder:has(.file-list .search input:focus) {
+    flex: 2;
 }

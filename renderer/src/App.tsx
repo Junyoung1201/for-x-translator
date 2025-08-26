@@ -8,10 +8,11 @@ import { Provider } from 'react-redux';
 import { gameSelector, setGameDir, setSelectedFile } from 'store/game';
 import { store } from 'store/store';
 import './App.css';
-import path from 'path';
 import FileEditor from 'components/file-viewer/FileEditor';
 import { openLastTranslationFile } from 'modules/file-editor';
-import SystemMessage from 'components/header/SystemMessage';
+import Header from 'components/header/Header';
+import Translator from 'components/translator/Translator';
+import { globalShortcutHandler } from 'modules/shortcut';
 
 ReactDOM.createRoot(document.querySelector("body>#app")!).render(
     <Provider store={store}>
@@ -29,35 +30,21 @@ function App() {
             await initConfig();
             openLastTranslationFile();
 
-            window.addEventListener('keydown', onGlobalShortcut);
+            window.addEventListener('keydown', globalShortcutHandler);
         })();
 
         return () => {
-            window.removeEventListener('keydown', onGlobalShortcut);
+            window.removeEventListener('keydown', globalShortcutHandler);
         }
     }, [])
 
     useEffect(() => {
-        window.addEventListener('keydown', onGlobalShortcut);
+        window.addEventListener('keydown', globalShortcutHandler);
 
         return () => {
-            window.removeEventListener('keydown', onGlobalShortcut);
+            window.removeEventListener('keydown', globalShortcutHandler);
         }
     }, [gameDir]);
-
-    function onGlobalShortcut(e: KeyboardEvent) {
-        const key = e.key.toLowerCase();
-
-        // 파일 새로고침
-        if (key === 'f5' || (e.ctrlKey && key === 'r')) {
-            e.stopPropagation();
-            e.preventDefault();
-
-            console.log("hello world");
-
-            openLastTranslationFile();
-        }
-    }
 
     async function waitForVariables() {
         return new Promise(done => {
@@ -90,25 +77,22 @@ function App() {
         {
             gameDir &&
             <>
-                <header>
-                    <div className='left'>
-                        <div>게임: {gameDir.slice(gameDir.lastIndexOf(path.sep) + 1, gameDir.length)}</div>
-                    </div>
-                    
-                    <div className='right'>
-                        <SystemMessage />
-                    </div>
-                </header>
+                <Header />
 
                 <section>
                     <div className='file-list-holder'>
                         <FileList />
                     </div>
-                    <div className='file-content-holder'>
+
+                    <div className='file-editor-holder'>
                         <FileEditor />
                         <div className='menu'>
 
                         </div>
+                    </div>
+
+                    <div className='translator-holder'>
+                        <Translator />
                     </div>
                 </section>
             </>

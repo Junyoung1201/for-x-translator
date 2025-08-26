@@ -1,69 +1,52 @@
-import puppeteer, { Browser, Page } from "puppeteer";
-import { app, clipboard } from "electron";
-import { sleep } from "./utils";
-import { playSound } from "./main";
-import path from "path";
-import { dir } from "console";
+import puppeteer from "puppeteer-extra";
+import {Page,Browser} from 'puppeteer';
+import pStealth from 'puppeteer-extra-plugin-stealth';
+import { sleep, waitForCondition } from "./utils/utils";
+import { I_TranslatorOptions } from "./types/translate";
+import { isDebug } from "./debug";
+
+puppeteer.use(pStealth());
 
 const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36";
 
-let deepL: Page | null = null;
-let google: Page | null = null;
+let deeplPage: Page | null = null;
+let googlePage: Page | null = null;
 let browser: Browser | null = null;
+
+process.addListener('SIGINT', closeBrowser)
+
+export function isBrowserClosed() {
+    return !browser;
+}
 
 export async function closeBrowser() {
     if (browser) {
         await browser.close();
+        deeplPage = null;
+        googlePage = null;
+        browser = null;
+        console.log("브라우저 종료");
     }
 }
 
-export async function setupBrowser() {
-    if (!browser) {
-        browser = await puppeteer.launch({ 
-            headless: app.isPackaged
-        });
-    }
-}
-
-export async function copyResult(outputText: string) {
-    let copyText = outputText;
-
-    // 소리 재생
-    playSound(path.join(app.getAppPath(), "complete.mp3"));
-
-    clipboard.writeText(copyText);
-    console.log('\n[Copy Output]');
-    console.log(`"${copyText}"\n`);
-}
-
-export async function translate(src: string) {
-    if (!browser) {
-        await setupBrowser();
+export async function ensureBrowser() {
+    if (!browser || !browser?.connected) {
+        browser = await puppeteer.launch({
+            headless: !isDebug()
+        })
+        browser.on('disconnected', () => {
+            browser = null;
+        })
     }
 
-    try {
-
-        const resultDeepL = await translateDeepL(src);
-        await copyResult(resultDeepL);
-        
-    } catch (err) {
-        // 폴백 번역기: 구글 번역기
-        console.warn(`failed to translate with DeepL. try google translator.`);
-        console.error(err);
-
-        try {
-
-            const resultGoogle = await translateGoogle(src);
-            await copyResult(resultGoogle);
-
-        } catch (err2) {
-            console.error(`failed to translate text.`);
-        }
-    }
+    return browser;
 }
 
-export async function setupPage(page: Page) {
+export async function createPage() {
     const BLOCK_REQ = new Set(['font', 'image']);
+
+    const browser = await ensureBrowser();
+    const page = await browser.newPage();
 
     await page.setUserAgent(USER_AGENT);
     await page.setRequestInterception(true);
@@ -78,94 +61,132 @@ export async function setupPage(page: Page) {
 
     });
 
+    return page;
 }
 
-export async function translateDeepL(src: string) {
+const DEF_OPTIONS: I_TranslatorOptions = {
+    srcLang: "ja",
+    destLang: "ko"
+}
 
-    const denyCookieButtonSelector = `button#cookie-banner-strict-accept-selected`;
+/*
+    DeepL 번역
+*/
 
-    const sourceElementSelector = `d-textarea[name="source"]>div`;
-    const outputElementSelector = `d-textarea[name="target"]`;
+let deeplTaskComplete = false;
+let deeplResCheck = true;
+let deeplTasking = false;
 
-    if (!deepL) {
+export async function translate_DeepL(srcText: string, {
+    srcLang, destLang
+}: I_TranslatorOptions = DEF_OPTIONS) {
 
-        deepL = await browser!.newPage()
-        await setupPage(deepL);
-
-        const url = `https://www.deepl.com/ko/translator#$ja/ko/`;
-        console.log(`open DeepL: "${url}"`);
-
-        await deepL.goto(url, { waitUntil: 'domcontentloaded' });
+    if(deeplTasking) {
+        throw `이미 DeepL 번역 작업을 하고 있습니다.`
     }
 
-    // 쿠키 거부 버튼 누르기
+    // 새로운 deepl 번역 요청 -> 변수 초기화
+    deeplResCheck = true;
+    deeplTaskComplete = false;
+    deeplTasking = true;
+
+    // deepL 접속
+    if (!deeplPage) {
+        deeplPage = await createPage();
+
+        deeplPage.on('response', res => {
+            // checking 값이 활성화되어 있을 때만 응답 처리
+            if (deeplResCheck) {
+
+                if (res.ok() && res.url().includes("/gatsby/") && res.url().endsWith(".json")) {
+                    deeplTaskComplete = true;
+                    deeplResCheck = false;
+                }
+            }
+        })
+    }
+
+    const escapedSrcText = encodeURIComponent(srcText);
+
     try {
-        await deepL.waitForSelector(denyCookieButtonSelector, { timeout: 1000 });
-        await deepL.click(denyCookieButtonSelector);
-    } catch {
 
-    }
+        // 페이지 접속
+        await deeplPage.goto(`https://www.deepl.com/en/translator#${srcLang}/${destLang}/${escapedSrcText}`, { waitUntil: 'networkidle2' })
 
-    // 입력칸 포커스
-    await deepL.focus(sourceElementSelector);
+        await deeplPage.waitForNetworkIdle();
 
-    // 입력칸에 있는 모든 문자열 지우기
-    await deepL.keyboard.down("ControlLeft");
-    await deepL.keyboard.down("A");
-    await deepL.keyboard.up("ControlRight");
-    await deepL.keyboard.up("A");
-    await deepL.keyboard.press("Backspace");
+        // 번역 끝날떄까지 기다리기
+        await waitForCondition(() => deeplTaskComplete, 7 * 1000);
+        await sleep(350);
 
-    // 입력칸에 번역할 문자열 입력
-    await deepL.type(sourceElementSelector, src.trim(), { delay: 20 });
+        const result = await deeplPage.$eval(`div[lang="ko"]:has(p)`, div => div.textContent.trim())
 
-    // 번역 될 때 까지 대기
-    await deepL.waitForSelector(outputElementSelector, { timeout: 5000 });
-    await sleep(1500);
+        return result;
 
-    // 출력 문자열
-    const output = await deepL.$eval(outputElementSelector, el => el.textContent);
+    } catch (err) {
 
-    if (output) {
-        console.log(`translated: "${output}"`);
-        return output;
-    } else {
+        throw err;
 
-        // 번역된 문자열이 비어있으면 번역 실패
-        throw `failed to translate with DeepL. (Translated output is empty.)`
+    } finally {
+        deeplTasking = false;
     }
 }
 
-export async function translateGoogle(src: string) {
+/*
+    구글 번역
+*/
+let googleTasking = false;
+let googleTaskComplete = false;
+let googleResCheck = false;
 
-    const sourceInputSelector = `textarea[aria-label="원본 텍스트"]`;
-    const resultSelector = `span.ryNqvb`;
-    
-    if(!google) {
-        google = await browser!.newPage()
-        await setupPage(google);
+export async function translate_Google(srcText: string, {
+    srcLang, destLang
+}: I_TranslatorOptions = DEF_OPTIONS) {
 
-        await google.goto(`https://translate.google.co.kr/?sl=${"ja"}&tl=${"ko"}`, { waitUntil: 'domcontentloaded' });
+    if(googleTasking) {
+        throw `이미 구글 번역 작업이 진행 중입니다.`
     }
 
-    await google.waitForSelector(sourceInputSelector, { timeout: 5000 });
+    googleTaskComplete = false;
+    googleTasking = true;
+    googleResCheck = true;
 
-    // 기존 입력란 지우기
-    await google.focus(sourceInputSelector);
-    await google.keyboard.down('ControlLeft');
-    await google.keyboard.down('A');
-    await google.keyboard.up('A');
-    await google.keyboard.up('ControlLeft');
-    await google.keyboard.press('Backspace');
+    if(!srcText) {
+        throw `번역할 텍스트가 없습니다.`
+    }
 
-    // 번역할 텍스트 입력
-    await google.type(sourceInputSelector, src);
+    if(!googlePage) {
+        googlePage = await createPage();
+        googlePage.on('response', res => {
+            if(googleResCheck) {
+                if(res.ok() && res.url().includes("/data/batchexecute")) {
+                    googleResCheck = false;
+                    googleTaskComplete = true;
+                }
+            }
+        })
+    }
 
-    await google.waitForNetworkIdle();
+    const escpaedText = encodeURIComponent(srcText);
 
-    const result = await google.$eval(resultSelector, el => el.textContent?.trim())
+    try {
 
-    console.log(`[Fallback] google translated: "${result}"`)
+        await googlePage.goto(`https://translate.google.co.kr/?sl=${srcLang}&tl=${destLang}&text=${escpaedText}&op=translate`, { waitUntil: 'networkidle2' })
 
-    return result;
+        // 번역 완료까지 기다리기
+        await waitForCondition(() => googleTaskComplete, 5000);
+
+        // 번역 결과 가져오기
+        const result = await googlePage.$eval(`span.ryNqvb`, span => span.textContent?.trim() ?? "");
+
+        return result;
+
+    } catch (err: any) {
+        console.error("구글 번역 실패:",err.message);
+        throw err;
+    } finally {
+        googleTasking = false;
+        googleTaskComplete = false;
+    }
+
 }

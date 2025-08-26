@@ -1,0 +1,26 @@
+#app>header {
+    background: #079fe6;
+    color: white;
+
+    padding-left: 15px;
+    padding-right: 15px;
+
+    height: 40px;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    >div {
+        flex: 1;
+    }
+
+    div.right {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: right;
+
+        gap: 15px;
+    }
+}

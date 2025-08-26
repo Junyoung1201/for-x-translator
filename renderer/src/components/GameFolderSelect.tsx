@@ -1,4 +1,4 @@
-import { openGameFolderDialog } from 'modules/fs';
+import { openGameDirSelectDialog } from 'modules/fs';
 import './GameFolderSelect.css';
 import { store } from 'store/store';
 import { setGameDir } from 'store/game';
@@ -6,7 +6,7 @@ import { setGameDir } from 'store/game';
 export default function GameFolderSelect() {
 
     async function selectGameFolder() {
-        const { success, message, data } = await openGameFolderDialog();
+        const { success, message, data } = await openGameDirSelectDialog();
 
         if (success) {
             if (typeof data === 'string') {
